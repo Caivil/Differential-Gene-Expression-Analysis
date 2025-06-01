@@ -1,6 +1,26 @@
-#######################################Differential gene expression#################################
+#######################################
+# Differential Gene Expression Analysis
+#######################################
+# This R script performs differential gene expression analysis
+# on a gene count matrix generated from transcriptomic data
+# of E. coli treated with 17 different antibiotics.
 
-setwd("C:/Users/mosuw/Desktop/Caivil")
+# The input matrix contains gene expression levels after
+# preprocessing with bioinformatics tools.
+
+# The workflow applies robust statistical methods to identify
+# genes that are significantly expressed in response to each
+# antibiotic treatment.
+
+# The results are saved as CSV files and can be used to explore
+# expression patterns associated with each antibiotic.
+
+# These patterns may serve as molecular fingerprints for
+# identifying and classifying antibiotic responses in E. coli.
+
+
+# Seting woring directory
+setwd("~/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/salmon workflow")
 getwd()
 
 #Install packages
@@ -21,13 +41,21 @@ library(ggplot2)
 library(tidyverse)
 
 #reading in count date
-gct_data <- fread("GSE110137_counts.gct", skip = 2)
+gct_data <- fread("Counts_salmon.csv")
+
+# Convert columns 2 to 57 to integer
+gct_data <- gct_data %>%
+  mutate(across(2:57, as.integer))
+
+#mutate NA to 0
+gct_data <- gct_data %>%
+  select(1:58) %>%
+  mutate(across(everything(), ~ replace_na(.x, 0)))
 
 #setting expression matrix from count data
-gene_names <- gct_data$NAME
-expression_matrix <- as.matrix(gct_data[, -c(1, 2), with = FALSE])
+gene_names <- gct_data$Geneid
+expression_matrix <- as.matrix(gct_data[, -c(1), with = FALSE])
 rownames(expression_matrix) <- gene_names
-
 
 
 library(GEOquery) # was not working look below
@@ -94,7 +122,7 @@ Doxycycline <- metadata %>%
 Globomycin <- metadata %>%
   filter(source_name_ch1 == "Globomycin") %>%
   select (1)
-	
+
 Levofloxacin <- metadata %>%
   filter(source_name_ch1 == "Levofloxacin") %>%
   select (1)
@@ -151,7 +179,7 @@ Trimethoprim_matrix <- expression_matrix[, c(1,2,20,21,39,40,57,19,38)]
 
 
 #save metadata file to personal computer
-write.csv(metadata, "~/bioinfo_Masters_Project/Project/understanding MOA/ML", row.names = FALSE)
+#write.csv(metadata, "~/bioinfo_Masters_Project/Project/understanding MOA/ML", row.names = FALSE)
 
 #differentiating treatment and control samples 
 sample_info_LolCDE <- data.frame(
@@ -250,8 +278,8 @@ head(sample_info_LolCDE)
 
 # Create DESeqDataSet object
 LolCDE_dds <- DESeqDataSetFromMatrix(countData = LolCDE_matrix,
-                                  colData = sample_info_LolCDE,
-                                  design = ~ condition)
+                                     colData = sample_info_LolCDE,
+                                     design = ~ condition)
 LolCDE_dds<- DESeq(LolCDE_dds)
 results_LolCDE <- results(LolCDE_dds)
 ###########################################################
@@ -262,95 +290,100 @@ B01_dds<- DESeq(B01_dds)
 results_B01 <- results(B01_dds)
 ###########################################################
 Ceftriaxone_dds <- DESeqDataSetFromMatrix(countData = Ceftriaxone_matrix,
-                              colData = sample_info_Ceftriaxone,
-                              design = ~ condition)
+                                          colData = sample_info_Ceftriaxone,
+                                          design = ~ condition)
 Ceftriaxone_dds<- DESeq(Ceftriaxone_dds)
 results_Ceftriaxone <- results(Ceftriaxone_dds)
 ############################################################
 Chloramphenicol_dds <- DESeqDataSetFromMatrix(countData = Chloramphenicol_matrix,
-                                  colData = sample_info_Chloramphenicol,
-                                  design = ~ condition)
+                                              colData = sample_info_Chloramphenicol,
+                                              design = ~ condition)
 Chloramphenicol_dds<- DESeq(Chloramphenicol_dds)
 results_Chloramphenicol <- results(Chloramphenicol_dds)
 ############################################################
 Ciprofloxacin_dds <- DESeqDataSetFromMatrix(countData = Ciprofloxacin_matrix,
-                                  colData = sample_info_Ciprofloxacin,
-                                  design = ~ condition)
+                                            colData = sample_info_Ciprofloxacin,
+                                            design = ~ condition)
 Ciprofloxacin_dds<- DESeq(Ciprofloxacin_dds)
 results_Ciprofloxacin <- results(Ciprofloxacin_dds)
 ###########################################################
 Clarithromycin_dds <- DESeqDataSetFromMatrix(countData = Clarithromycin_matrix,
-                                  colData = sample_info_Clarithromycin,
-                                  design = ~ condition)
+                                             colData = sample_info_Clarithromycin,
+                                             design = ~ condition)
 Clarithromycin_dds<- DESeq(Clarithromycin_dds)
 results_Clarithromycin <- results(Clarithromycin_dds)
 ###############################################################
 Colistin_dds <- DESeqDataSetFromMatrix(countData = Colistin_matrix,
-                                  colData = sample_info_Colistin,
-                                  design = ~ condition)
+                                       colData = sample_info_Colistin,
+                                       design = ~ condition)
 Colistin_dds<- DESeq(Colistin_dds)
 results_Colistin <- results(Colistin_dds)
 #################################################################
 Doxycycline_dds <- DESeqDataSetFromMatrix(countData = Doxycycline_matrix,
-                                  colData = sample_info_Doxycycline,
-                                  design = ~ condition)
+                                          colData = sample_info_Doxycycline,
+                                          design = ~ condition)
 Doxycycline_dds<- DESeq(Doxycycline_dds)
 results_Doxycycline <- results(Doxycycline_dds)
 #################################################################
 Globomycin_dds <- DESeqDataSetFromMatrix(countData = Globomycin_matrix,
-                                  colData = sample_info_Globomycin,
-                                  design = ~ condition)
+                                         colData = sample_info_Globomycin,
+                                         design = ~ condition)
 Globomycin_dds<- DESeq(Globomycin_dds)
 results_Globomycin <- results(Globomycin_dds)
 #################################################################
 Levofloxacin_dds <- DESeqDataSetFromMatrix(countData = Levofloxacin_matrix,
-                                  colData = sample_info_Levofloxacin,
-                                  design = ~ condition)
+                                           colData = sample_info_Levofloxacin,
+                                           design = ~ condition)
 Levofloxacin_dds<- DESeq(Levofloxacin_dds)
 results_Levofloxacin <- results(Levofloxacin_dds)
 ###################################################################
 Mecillinam_dds <- DESeqDataSetFromMatrix(countData = Mecillinam_matrix,
-                                  colData = sample_info_Mecillinam,
-                                  design = ~ condition)
+                                         colData = sample_info_Mecillinam,
+                                         design = ~ condition)
 Mecillinam_dds<- DESeq(Mecillinam_dds)
 results_Mecillinam <- results(Mecillinam_dds)
 #################################################################
 Meropenem_dds <- DESeqDataSetFromMatrix(countData = Meropenem_matrix,
-                                  colData = sample_info_Meropenem,
-                                  design = ~ condition)
+                                        colData = sample_info_Meropenem,
+                                        design = ~ condition)
 Meropenem_dds<- DESeq(Meropenem_dds)
 results_Meropenem <- results(Meropenem_dds)
 ##################################################################
 Nitrofurantoin_dds <- DESeqDataSetFromMatrix(countData = Nitrofurantoin_matrix,
-                                  colData = sample_info_Nitrofurantoin,
-                                  design = ~ condition)
+                                             colData = sample_info_Nitrofurantoin,
+                                             design = ~ condition)
 Nitrofurantoin_dds<- DESeq(Nitrofurantoin_dds)
 results_Nitrofurantoin <- results(Nitrofurantoin_dds)
 ##################################################################
 Norfloxacin_dds <- DESeqDataSetFromMatrix(countData = Norfloxacin_matrix,
-                                  colData = sample_info_Norfloxacin,
-                                  design = ~ condition)
+                                          colData = sample_info_Norfloxacin,
+                                          design = ~ condition)
 Norfloxacin_dds<- DESeq(Norfloxacin_dds)
 results_Norfloxacin <- results(Norfloxacin_dds)
 #####################################################################
 Nitroxolin_dds <- DESeqDataSetFromMatrix(countData = Nitroxolin_matrix,
-                                  colData = sample_info_Nitroxolin,
-                                  design = ~ condition)
+                                         colData = sample_info_Nitroxolin,
+                                         design = ~ condition)
 Nitroxolin_dds<- DESeq(Nitroxolin_dds)
 results_Nitroxolin <- results(Nitroxolin_dds)
 ####################################################################
 PolymyxineB_dds <- DESeqDataSetFromMatrix(countData = PolymyxineB_matrix,
-                                  colData = sample_info_PolymyxineB,
-                                  design = ~ condition)
+                                          colData = sample_info_PolymyxineB,
+                                          design = ~ condition)
 PolymyxineB_dds<- DESeq(PolymyxineB_dds)
 results_PolymyxineB <- results(PolymyxineB_dds)
 #######################################################################
 Trimethoprim_dds <- DESeqDataSetFromMatrix(countData = Trimethoprim_matrix,
-                                          colData = sample_info_Trimethoprim,
-                                          design = ~ condition)
+                                           colData = sample_info_Trimethoprim,
+                                           design = ~ condition)
 Trimethoprim_dds<- DESeq(Trimethoprim_dds)
 results_Trimethoprim <- results(Trimethoprim_dds)
 
+#import library to plot graphs
+library(RColorBrewer)
+library(gplots)
+
+summary(results_Trimethoprim)
 # This will display the adjusted p-values for each gene
 #sig_res <- results[!is.na(results$padj) & results$padj < 0.05, ] (source code)
 #head (sig_res)
@@ -394,9 +427,29 @@ Nitroxolin_df <- as.data.frame(results_Nitroxolin)
 PolymyxineB_df <- as.data.frame(results_PolymyxineB)
 Trimethoprim_df <- as.data.frame(results_Trimethoprim)
 
+#save as .csv
+write.csv(LolCDE_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/LolCDE.csv", row.names = T)
+write.csv(B01_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/B01.csv", row.names = T)
+write.csv(Ceftriaxone_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Ceftriaxone.csv", row.names = T)
+write.csv(Chloramphenicol_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Chloramphenicol.csv", row.names = T)
+write.csv(Ciprofloxacin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Ciprofloxacin.csv", row.names = T)
+write.csv(Clarithromycin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Clarithromycin.csv", row.names = T)
+write.csv(Colistin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Colistin.csv", row.names = T)
+write.csv(Doxycycline_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Doxycycline.csv", row.names = T)
+write.csv(Globomycin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Globomycin.csv", row.names = T)
+write.csv(Levofloxacin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Levofloxacin.csv", row.names = T)
+write.csv(Mecillinam_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Mecillinam.csv", row.names = T)
+write.csv(Meropenem_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Meropenem.csv", row.names = T)
+write.csv(Nitrofurantoin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Nitrofurantoin.csv", row.names = T)
+write.csv(Norfloxacin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Norfloxacin.csv", row.names = T)
+write.csv(Nitroxolin_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Nitroxolin.csv", row.names = T)
+write.csv(PolymyxineB_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/PolymyxineB.csv", row.names = T)
+write.csv(Trimethoprim_df, "C:/Users/cndobela/Documents/bioinfo_Masters_Project/Project/understanding MOA/ML/analysis/P-values/Trimethoprim.csv", row.names = T)
+
+
 #filter out " -" and "not available"
 #results_df_filter <-  results_df%>%
-  #filter(pvalue != "NA") (sources code)
+#filter(pvalue != "NA") (sources code)
 
 LolCDE_df_filter <- LolCDE_df %>%
   filter(!is.na(pvalue))
@@ -447,7 +500,9 @@ PolymyxineB_df_filter <- PolymyxineB_df %>%
   filter(!is.na(pvalue))
 
 Trimethoprim_df_filter <- Trimethoprim_df %>%
-  filter(!is.na(pvalue))
+  filter(!is.na(pvalue))%>%
+  filter(!is.na(padj))
+
 
 #number of rows
 #nrow(results_df)
@@ -496,10 +551,11 @@ PolymyxineB_df$significant <- ifelse(PolymyxineB_df$padj < 0.05 & abs(Polymyxine
 
 Trimethoprim_df$significant <- ifelse(Trimethoprim_df$padj < 0.05 & abs(Trimethoprim_df$log2FoldChange) > 1, "Significant", "Not Significant")
 
+print(Trimethoprim_df)
 
 #filter only sig values (not yet tho)
 #Sig_df <-  results_df_filter%>%
-  #filter(significant == "Significant")
+#filter(significant == "Significant")
 
 LolCDE_Sig_df <- LolCDE_df %>%
   filter(significant == "Significant")
@@ -555,6 +611,8 @@ Trimethoprim_Sig_df <- Trimethoprim_df %>%
 #number of rows
 #nrow(results_df_filter)
 #nrow(Sig_df)
+
+# To see how many rows had signifcnat expression over the whole rows
 nrow(LolCDE_df)  # Number of rows in the LolCDE data frame
 nrow(LolCDE_Sig_df)  # Number of rows in the significant LolCDE data frame
 
@@ -607,12 +665,3 @@ nrow(Trimethoprim_df)  # Number of rows in the Trimethoprim data frame
 nrow(Trimethoprim_Sig_df)  # Number of rows in the significant Trimethoprim data frame
 
 ############################################################################################################################
-#############################Making ML data matrix##################################################
-
-# MOA == Compounds
-data.frame(Position = 1:ncol(metadata), Column_Name = colnames(metadata))
-
-MOA_compound <- metadata %>%
-  select(8,12) %>%
-  distinct() %>%
-  filter(characteristics_ch1.2 != "moa:control")
